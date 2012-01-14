@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 -- Ella, a wrapper around Happstack lite to make it more like sinatra 
--- For the noobs, by a noob
+-- For noobs, by noobs
 
 
 module Happstack.Ella (get, post, route, routes, cap, mount) where
@@ -9,8 +9,7 @@ import Happstack.Lite (ServerPart, Response, Method(..), method, dir, nullDir, p
 import Control.Monad.Writer (tell, Writer, execWriter)
 import Data.List.Split (splitOn)
 
-
-import Control.Monad.IO.Class (liftIO)
+-- import Control.Monad.IO.Class (liftIO)
 
 type Path = String
 type Handler = ServerPart Response
@@ -23,24 +22,12 @@ routes, route :: Writer Handler () -> Handler
 routes = execWriter
 route = execWriter
 
-
 -- so the interface to the functions that get passed in could be better, but this works
 get :: Path -> ([String] -> Handler) -> Writer Handler ()
 get = addRoute GET
 
 post :: Path -> ([String] -> Handler) -> Writer Handler ()
 post = addRoute POST
-
-
-cap :: (String -> Handler) -> ([String] -> Handler) 
-cap h caps = h (head caps)
-
--- right now only supports 1 level
-mount :: Handler -> Writer Handler ()
-mount = tell
-
-mountAt :: String -> Handler -> Writer Handler()
-mountAt = error "Todo: mountAt should mount another set of handlers at the specified urls"
 
 -- so now h is a function that first takes a string
 -- can I make it return a function instead of actually calling it? 
@@ -65,6 +52,16 @@ parseSegment xs = PathName xs
 
 
 
+cap :: (String -> Handler) -> ([String] -> Handler) 
+cap h caps = h (head caps)
+
+-- right now only supports 1 level
+mount :: Handler -> Writer Handler ()
+mount = tell
+
+mountAt :: String -> Handler -> Writer Handler()
+mountAt = error "Todo: mountAt should mount another set of handlers at the specified urls"
+
 
 {-
 
@@ -74,7 +71,7 @@ parseSegment xs = PathName xs
 [ ] serveDirectory working
 
 Later
-[ ] Bring back sub-routers
+[ ] Bring back sub-routers VS /bob/woot VS /bob
 [ ] Better interface for captures
 
 -}
