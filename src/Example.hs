@@ -2,10 +2,11 @@
 
 module Main where
 
-import Happstack.Ella (routes, get, cap, mount)
+import Happstack.Ella
 import Happstack.Lite
 
 import Control.Monad.IO.Class (liftIO)
+import Data.ByteString.Lazy.Char8 as L
 
 main :: IO ()
 main = serve Nothing app
@@ -14,23 +15,32 @@ main = serve Nothing app
 -- serve definitely wants a ServerPart Response
 app :: ServerPart Response
 app = routes $ do
-    get "/hello/:name/loud" $ cap helloLoud -- means to call helloLoud with one argument
-    get "/hello/:name" $ cap hello
+    get "/hello/:name/loud" helloLoud -- means to call helloLoud with one argument
+    get "/hello/:name" hello
+    post "/hello" postName
     mount $ serveDirectory DisableBrowsing [] "./public"
 
 root :: ServerPart Response
 root = ok $ toResponse "root"
 
 -- this is, of course, completely annoying
-hello :: String -> ServerPart Response
-hello name = ok $ toResponse ("Hello " ++ name)
+hello :: Req -> ServerPart Response
+hello r = ok $ toResponse ("Hello " ++ (cap r))
 
-helloLoud :: String -> ServerPart Response
-helloLoud name = ok $ toResponse ("HELLO " ++ name)
+helloLoud :: Req -> ServerPart Response
+helloLoud r = ok $ toResponse ("HELLO " ++ (cap r))
+
+postName :: Req -> ServerPart Response
+postName r = do
+    let bodyText = L.unpack (body r)
+    ok $ toResponse ("WOOT " ++ bodyText)
+   
+    
 
 happstackTests :: ServerPart Response
 happstackTests = msum [ dir "asdf" $ nullDir >> asdf
                       ]
+
 asdf :: ServerPart Response
 asdf = ok $ toResponse "asdf2"
 
