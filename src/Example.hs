@@ -2,35 +2,43 @@
 
 module Main where
 
-import Happstack.Ella (routes, get)
+import Happstack.Ella (routes, get, cap, mount)
 import Happstack.Lite
+
+import Control.Monad.IO.Class (liftIO)
 
 main :: IO ()
 main = serve Nothing app
 
 -- so, start at the top with the resource groups. You can put them in any order you wish
+-- serve definitely wants a ServerPart Response
 app :: ServerPart Response
 app = routes $ do
-    get "hello" hello
-
-    -- [
-    -- -- , dir "companies" $ dir "all" $ allCompanies
-    -- , dir "companies" $ companies
-    -- , dir "users" $ users
-    -- , method GET  >> nullDir >>      root
-    -- , serveDirectory DisableBrowsing [] "./public"
-    -- ]
-
+    get "/hello/:name/loud" $ cap helloLoud -- means to call helloLoud with one argument
+    get "/hello/:name" $ cap hello
+    mount $ serveDirectory DisableBrowsing [] "./public"
 
 root :: ServerPart Response
 root = ok $ toResponse "root"
 
-hello :: ServerPart Response
-hello = ok $ toResponse "Hello"
+-- this is, of course, completely annoying
+hello :: String -> ServerPart Response
+hello name = ok $ toResponse ("Hello " ++ name)
+
+helloLoud :: String -> ServerPart Response
+helloLoud name = ok $ toResponse ("HELLO " ++ name)
+
+happstackTests :: ServerPart Response
+happstackTests = msum [ dir "asdf" $ nullDir >> asdf
+                      ]
+asdf :: ServerPart Response
+asdf = ok $ toResponse "asdf2"
+
+userById :: String -> ServerPart Response
+userById userId = ok $ toResponse ("UserId: " ++ userId)
 
 
 -- COMPANIES RESOURCE GROUP --
-
 -- /companies/:companyId/people
 -- /companies/:companyId
 -- /companies/all
@@ -54,20 +62,4 @@ company = ok $ toResponse "Company"
 
 companyPeople :: ServerPart Response
 companyPeople = ok $ toResponse "Company People"
-
-
-
--- to test my get DSL
--- [ ] Monad
--- [ ] Captures
--- users :: ServerPart Response
--- users = msum [ dir "fake" $ ok $ toResponse "fake"
---              , dir "fake2" $ ok $ toResponse "fake2"
---              -- , get "henry" company
---              -- , get "henry/name" companyPeople
---              -- , get "asdf" asdf
---              , dir "example" exampleRouteBlock
---              ]
-
-
 
